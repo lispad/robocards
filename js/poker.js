@@ -14,12 +14,14 @@ LApp=function(){
     this.init=function(){
         this.history.init();
         this.log = new LChat($('.page.chat > textarea'));
-        $('.navbar-inner > ul.nav > li > ._connect').click(function(){
+
+        this._connectButtonPressed=function(){
             if (typeof this.CS=='undefined'  || !this.CS.isConnected())
                 this.connect();
             else
                 this.disconnect();
-        }.bind(this));
+        };
+        $('.navbar-inner > ul.nav > li > ._connect').click(this._connectButtonPressed());
     };
 
     this.connect=function (){
@@ -68,6 +70,9 @@ LApp=function(){
             }.bind(this), false);
         },
         _goToPage: function (url) {
+            var newTab=$('.navbar-inner > ul.nav').children('.' + url);
+            if (newTab.length==0)
+                return console.error('Error in tab selection. Refresh page');
             $('.navbar-inner > ul.nav > li').removeClass('active');
             $('.navbar-inner > ul.nav').children('.' + url).addClass('active');
             $('.page').hide();
@@ -138,11 +143,12 @@ LChat=function(area){
 
         $(this._area).on('keypress',function(event){
             var key=String.fromCharCode(parseInt(event.charCode));
-            if (this._callback!=null)
+            if (typeof this._callback=="function")
                 this._callback(key);
             return this._echo;
         }.bind(this));
     };
+
     this.add=function(text){
         if (this._area.value.length>1024)
             this._area.value=this._area.value.substr(0, 1024);
