@@ -5,62 +5,76 @@
  * Time: 17:47
  * To change this template use File | Settings | File Templates.
  */
+
 $(document).ready(function(){
-    initHistoryApi();
-    initContainers();
-    $('.navbar-inner > ul.nav > li > ._connect').click(function(){
-        connectPressed();
-    });
+    new LApp().init();
+});
 
-}.bind(window));
+LApp=function(){
+    this.init=function(){
+        this.history.init();
+        this.log = new LChat($('.page.chat > textarea'));
+        $('.navbar-inner > ul.nav > li > ._connect').click(function(){
+            if (typeof this.CS=='undefined'  || !this.CS.isConnected())
+                this.connect();
+            else
+                this.disconnect();
+        }.bind(this));
+    };
 
+    this.connect=function (){
+        var buf='';
+        /* Connection is set on creating, we have to recreate websocket to reconnect */
+        this.CS=new LWebSocket("localhost", 8080);
+        this.CS.on('connect',function(){
+            this.log.add("==Connected to WebSocket==\n");
+            $('.navbar-inner > div > ._status').removeClass('badge-important').removeClass('badge-info').addClass('badge-success').text('connected');
+        }.bind(this));
 
-function initContainers(){
-    window.log=new Chat($('.page.chat > textarea'));
-}
+        this.CS.on('disconnect',function(){
+            this.log.add("==Socket closed (not connected):==\n");
+            $('.navbar-inner > div > ._status').removeClass('badge-success').removeClass('badge-info').addClass('badge-important').text('disconnected');
+        }.bind(this));
 
-function connectPressed(){
-    if (typeof CS=='undefined'  || !CS.isConnected())
-        connect();
-    else
-        disconnect();
-}
-
-function connect(){
-    var buf='';
-    /* Connection is set on creating, we have to recreate websocket to reconnect */
-    window.CS=new LWebSocket("localhost", 8080);
-    CS.bind('connect',function(){
-        log.add("==Connected to WebSocket==\n");
-        $('.navbar-inner > div > ._status').removeClass('badge-important').removeClass('badge-info').addClass('badge-success').text('connected');
-    });
-
-    CS.bind('disconnect',function(){
-        log.add("==Socket closed (not connected):==\n");
-        $('.navbar-inner > div > ._status').removeClass('badge-success').removeClass('badge-info').addClass('badge-important').text('disconnected');
-    });
-
-    CS.bind('receive', function(data){
-        log.push(data);
+        this.CS.on('receive', function(data){
+            this.log.push(data);
 //        buf+=data;
 //        var received=buf.split("\n");
 //        buf=received.pop()
 //        received.forEach(function(value){
 //            log.add(value);
 //        })
-    });
+        }.bind(this));
 
-    log.bind(function(key){
-        CS.send(key);
-    }.bind(this));
+        this.log.onChar(function(key){
+            this.CS.send(key);
+        }.bind(this));
 
-    $('.navbar-inner > div > ._status').removeClass('badge-important').removeClass('badge-success').addClass('badge-info').text('connecting');
-    CS.connect();
-}
+        $('.navbar-inner > div > ._status').removeClass('badge-important').removeClass('badge-success').addClass('badge-info').text('connecting');
+        this.CS.connect();
+    };
 
-function disconnect(){
-    CS.disconnect();
-}
+    this.disconnect=function(){
+        this.CS.disconnect();
+    };
+
+
+    this.history = {
+        init: function () {
+            window.addEventListener('popstate', function (event) {
+                var url = location.hash.replace("#", '') || location.pathname.replace("/", '');
+                if (url)
+                    this._goToPage(url);
+            }.bind(this), false);
+        },
+        _goToPage: function (url) {
+            $('.navbar-inner > ul.nav > li').removeClass('active');
+            $('.navbar-inner > ul.nav').children('.' + url).addClass('active');
+            $('.page').hide();
+            $('.page.' + url).show();
+        }
+    };
+};
 
 LWebSocket=function (addr, port){
     this._addr=addr;
@@ -85,7 +99,7 @@ LWebSocket=function (addr, port){
             this._ws.send(buffer);
     };
 
-    this.bind = function (type, callback){
+    this.on = function (type, callback){
         if (typeof this._listeners[type]!='undefined')
             this._listeners[type].push(callback);
     };
@@ -111,7 +125,7 @@ LWebSocket=function (addr, port){
     };
 };
 
-Chat=function(area){
+LChat=function(area){
     this._area=null;
     this._callback=null;
     this._echo=false;
@@ -134,36 +148,22 @@ Chat=function(area){
             this._area.value=this._area.value.substr(0, 1024);
         this._area.value=text+this._area.value;
     };
+
     this.push=function(text){
         this._area.value+=text;
-    }
+    };
+
     this.clear=function(){
         this._area.value='';
     };
-    this.bind=function (callback){
+
+    this.onChar=function (callback){
         this._callback=callback;
     };
+
     this.echo=function (enabled){
         this._echo=enabled;
     };
 
     this.setArea(area);
 };
-
-
-function goToPage(url){
-    $('.navbar-inner > ul.nav > li').removeClass('active');
-    $('.navbar-inner > ul.nav').children('.'+url).addClass('active');
-    $('.page').hide();
-    $('.page.'+url).show();
-//    window.history.pushState(null,url, url);
-}
-
-function initHistoryApi(){
-    window.addEventListener('popstate', function(event){
-        var url=location.hash.replace("#",'')||location.pathname.replace("/",'');
-        if (url)
-            goToPage(url);
-    }, false);
-}
-
