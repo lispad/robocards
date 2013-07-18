@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" >
+    <title>poker HTML5 test</title>
+    <link type="text/css" href="css/bootstrap.min.css"  rel="stylesheet" media="screen">
+    <link type="text/css" href="css/poker.css"  rel="stylesheet" media="screen">
+    <script src="js/jquery-1.8.2.min.js" type="text/javascript" lang="javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"  lang="javascript"></script>
+    <script src="js/smoothie.js" type="text/javascript" lang="javascript"></script>
+    <script src="js/poker.js" type="text/javascript" lang="javascript"></script>
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <a class="brand" href=""> &nbsp; &nbsp; J4Fun</a>
+        <ul class="nav">
+            <li class="settings"><a href="#settings" class="active">Settings</a></li>
+            <li class="chat"><a href="#chat">Chat</a></li>
+            <li class="divider-vertical"></li>
+            <li><input type="button" class="btn btn-info _connect" value="connect!"></li>
+            <li class="divider-vertical"></li>
+            <li></li>
+        </ul>
+        <div class="brand">
+            <span class="badge badge-important _status">Disconnected</span>
+        </div>
+    </div>
+</div>
+<div class="page settings hide">
+    Порт: <input type="text" name="port" class="input-medium disabled" disabled="disabled" value="8080"><br>
+</div>
+<div class="page chat">
+    <textarea id="chatLog" style="width: 90%; height: 400px"></textarea><br>
+    <label><input type="checkbox" name="echo">echo ?</label>
+</div>
+
+</body>
+</html>
